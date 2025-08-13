@@ -33,8 +33,19 @@ func handlerLogin(s *State, cmd Command) error {
 	}
 
 	username := cmd.parameters[1]
-	err := s.config.SetUser(username)
+	_doesUserExists, err := doesUserExists(username, s.db)
 	if err != nil {
+		fmt.Println("error fetching the user")
+		return err
+	}
+
+	if !_doesUserExists {
+		return fmt.Errorf("user does not exists")
+	}
+
+	err = s.config.SetUser(username)
+	if err != nil {
+		fmt.Println("error setting the active user")
 		return err
 	}
 
