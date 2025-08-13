@@ -35,6 +35,7 @@ func main () {
 	// commands
 	commands.register("login", handlerLogin)
 	commands.register("register", handlerRegister)
+	commands.register("reset", handlerReset)
 	
 	args := os.Args
 
@@ -42,11 +43,12 @@ func main () {
 		fmt.Println("too few arguments, user `help`")
 		os.Exit(1)
 	}
-
-	parameters := args[1:]
+	
+	command := args[1]
+	parameters := args[2:]
 	
 	var commandError error
-	switch parameters[0] {
+	switch command {
 		case "login":
 			commandError = commands.run(&state, Command{
 				name: "login",
@@ -55,6 +57,11 @@ func main () {
 		case "register":
 			commandError = commands.run(&state, Command{
 				name: "register",
+				parameters: parameters,
+			})
+		case "reset":
+			commandError = commands.run(&state, Command{
+				name: "reset",
 				parameters: parameters,
 			})
 		default:

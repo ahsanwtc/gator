@@ -28,11 +28,11 @@ func handlerLogin(s *State, cmd Command) error {
 		return fmt.Errorf("wrong command handler")
 	}
 
-	if len(cmd.parameters) != 2 {
-		return fmt.Errorf("login expects 2 argument but got %d", len(cmd.parameters))
+	if len(cmd.parameters) != 1 {
+		return fmt.Errorf("login expects 1 argument but got %d", len(cmd.parameters))
 	}
 
-	username := cmd.parameters[1]
+	username := cmd.parameters[0]
 	_doesUserExists, err := doesUserExists(username, s.db)
 	if err != nil {
 		fmt.Println("error fetching the user")
@@ -71,11 +71,11 @@ func handlerRegister(s *State, cmd Command) error {
 		return fmt.Errorf("wrong command handler")
 	}
 
-	if len(cmd.parameters) != 2 {
-		return fmt.Errorf("login expects 2 argument but got %d", len(cmd.parameters))
+	if len(cmd.parameters) != 1 {
+		return fmt.Errorf("register expects 1 argument but got %d", len(cmd.parameters))
 	}
 
-	username := cmd.parameters[1]
+	username := cmd.parameters[0]
 	_doesUserExists, err := doesUserExists(username, s.db)
 	if err != nil {
 		fmt.Println("error fetching the user")
@@ -104,4 +104,22 @@ func handlerRegister(s *State, cmd Command) error {
 
 	fmt.Printf("%s has been created successfully\n", username)
 	return nil
+}
+
+func handlerReset(s *State, cmd Command) error {
+	if cmd.name != "reset" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 0 {
+		return fmt.Errorf("reset expects 0 argument but got %d", len(cmd.parameters))
+	}
+
+	err := s.db.ResetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Reset users successful")
+	return  nil
 }
