@@ -123,3 +123,28 @@ func handlerReset(s *State, cmd Command) error {
 	fmt.Println("Reset users successful")
 	return  nil
 }
+
+func handlerUsers(s *State, cmd Command) error {
+	if cmd.name != "users" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 0 {
+		return fmt.Errorf("users expects 0 argument but got %d", len(cmd.parameters))
+	}
+
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		text := fmt.Sprintf("* %s", user.Name)
+		if s.config.CURRENT_USER == user.Name {
+			text = fmt.Sprintf("%s (current)", text)
+		}
+		fmt.Println(text)
+	}
+
+	return  nil
+}
