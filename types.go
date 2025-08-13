@@ -1,9 +1,13 @@
 package main
 
-import "github.com/ahsanwtc/gator/internal/config"
+import (
+	"github.com/ahsanwtc/gator/internal/config"
+	"github.com/ahsanwtc/gator/internal/database"
+)
 
 type State struct {
 	config *config.Config
+	db  *database.Queries
 }
 
 type Command struct {
