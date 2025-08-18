@@ -200,3 +200,37 @@ func handlerAddFeed(s *State, cmd Command) error {
 	fmt.Println(feed)
 	return  nil
 }
+
+func handlerFeeds(s *State, cmd Command) error {
+	if cmd.name != "feeds" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 0 {
+		return fmt.Errorf("feeds expects 0 argument but got %d", len(cmd.parameters))
+	}
+
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("error fetching feeds from the database: %s", err)
+	}
+
+	users := make(map[string]string)
+	for _, feed := range feeds {
+		userName, ok := users[feed.ID.String()]
+		if !ok {
+			user, err := s.db.GetUserById(context.Background(), feed.UserID)
+			if err != nil {
+				return fmt.Errorf("error fetching user from the database: %s", err)		
+			}
+			users[feed.ID.String()] = user.Name
+			userName = user.Name
+		}
+
+		fmt.Println(feed.Name)
+		fmt.Printf("- %s\n", feed.Url)
+		fmt.Printf("- %s\n", userName)
+	}
+
+	return  nil
+}

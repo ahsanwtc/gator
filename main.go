@@ -39,6 +39,7 @@ func main () {
 	commands.register("users", handlerUsers)
 	commands.register("agg", handlerAggregate)
 	commands.register("addfeed", handlerAddFeed)
+	commands.register("feeds", handlerFeeds)
 	
 	args := os.Args
 
@@ -80,6 +81,11 @@ func main () {
 		case "addfeed":
 			commandError = commands.run(&state, Command{
 				name: "addfeed",
+				parameters: parameters,
+			})
+		case "feeds":
+			commandError = commands.run(&state, Command{
+				name: "feeds",
 				parameters: parameters,
 			})
 		default:
