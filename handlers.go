@@ -156,7 +156,7 @@ func handlerAggregate(s *State, cmd Command) error {
 	}
 
 	// if len(cmd.parameters) != 0 {
-	// 	return fmt.Errorf("users expects 0 argument but got %d", len(cmd.parameters))
+	// 	return fmt.Errorf("agg expects 0 argument but got %d", len(cmd.parameters))
 	// }
 
 	rssFeed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
@@ -164,5 +164,39 @@ func handlerAggregate(s *State, cmd Command) error {
 		return err
 	}
 	fmt.Println(rssFeed)
+	return  nil
+}
+
+func handlerAddFeed(s *State, cmd Command) error {
+	if cmd.name != "addfeed" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 2 {
+		return fmt.Errorf("addfeed expects 2 argument but got %d", len(cmd.parameters))
+	}
+
+	name := cmd.parameters[0]
+	url := cmd.parameters[1]
+
+	if len(name) == 0 || len(url) == 0 {
+		return fmt.Errorf("invalid parameter values")
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
+	if err != nil {
+		return fmt.Errorf("error fetching user from the database: %s", err)
+	}
+
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID: uuid.New(),
+		Name: name,
+		Url: url,
+		UserID: user.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("error inserting feed into the database: %s", err)
+	}
+	fmt.Println(feed)
 	return  nil
 }

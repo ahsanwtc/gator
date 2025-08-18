@@ -38,6 +38,7 @@ func main () {
 	commands.register("reset", handlerReset)
 	commands.register("users", handlerUsers)
 	commands.register("agg", handlerAggregate)
+	commands.register("addfeed", handlerAddFeed)
 	
 	args := os.Args
 
@@ -76,8 +77,14 @@ func main () {
 				name: "agg",
 				parameters: parameters,
 			})
+		case "addfeed":
+			commandError = commands.run(&state, Command{
+				name: "addfeed",
+				parameters: parameters,
+			})
 		default:
-			fmt.Printf("`%s`: unknown command\n", parameters[0])
+			fmt.Printf("`%s`: unknown command\n", command)
+			os.Exit(1)
 	}
 
 	if commandError != nil {
