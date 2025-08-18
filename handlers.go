@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/ahsanwtc/gator/internal/database"
+	"github.com/ahsanwtc/gator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -146,5 +147,22 @@ func handlerUsers(s *State, cmd Command) error {
 		fmt.Println(text)
 	}
 
+	return  nil
+}
+
+func handlerAggregate(s *State, cmd Command) error {
+	if cmd.name != "agg" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	// if len(cmd.parameters) != 0 {
+	// 	return fmt.Errorf("users expects 0 argument but got %d", len(cmd.parameters))
+	// }
+
+	rssFeed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	fmt.Println(rssFeed)
 	return  nil
 }

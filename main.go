@@ -37,6 +37,7 @@ func main () {
 	commands.register("register", handlerRegister)
 	commands.register("reset", handlerReset)
 	commands.register("users", handlerUsers)
+	commands.register("agg", handlerAggregate)
 	
 	args := os.Args
 
@@ -68,6 +69,11 @@ func main () {
 		case "users":
 			commandError = commands.run(&state, Command{
 				name: "users",
+				parameters: parameters,
+			})
+		case "agg":
+			commandError = commands.run(&state, Command{
+				name: "agg",
 				parameters: parameters,
 			})
 		default:
