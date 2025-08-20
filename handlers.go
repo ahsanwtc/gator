@@ -183,9 +183,9 @@ func handlerAddFeed(s *State, cmd Command) error {
 		return fmt.Errorf("invalid parameter values")
 	}
 
-	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
+	user, err := s.userService.FetchUserByName(s.config.CURRENT_USER)
 	if err != nil {
-		return fmt.Errorf("error fetching user from the database: %s", err)
+		return err
 	}
 
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
@@ -197,7 +197,17 @@ func handlerAddFeed(s *State, cmd Command) error {
 	if err != nil {
 		return fmt.Errorf("error inserting feed into the database: %s", err)
 	}
-	fmt.Println(feed)
+
+	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID: uuid.New(),
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("error inserting follow for the user into the database: %s", err)
+	}
+	
+	fmt.Printf("successfully added the feed: %s\n", feed.Name)
 	return  nil
 }
 
@@ -230,6 +240,70 @@ func handlerFeeds(s *State, cmd Command) error {
 		fmt.Println(feed.Name)
 		fmt.Printf("- %s\n", feed.Url)
 		fmt.Printf("- %s\n", userName)
+	}
+
+	return  nil
+}
+
+func handlerFollow(s *State, cmd Command) error {
+	if cmd.name != "follow" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 1 {
+		return fmt.Errorf("follow expects 1 argument but got %d", len(cmd.parameters))
+	}
+
+	url := cmd.parameters[0]
+	if url == "" {
+		return fmt.Errorf("invalid url")
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
+	if err != nil {
+		return fmt.Errorf("error fetching user from the database: %s", err)		
+	}
+
+	feed, err := s.db.GetFeedByUrl(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("error fetching feed from the database: %s", err)		
+	}
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID: uuid.New(),
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("error creating feed_follow: %s", err)		
+	}
+
+	fmt.Printf("feed name: %s, user: %s\n", feedFollow.FeedName, feedFollow.UserName)
+
+	return  nil
+}
+
+func handlerFollowing(s *State, cmd Command) error {
+	if cmd.name != "following" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 0 {
+		return fmt.Errorf("following expects 0 argument but got %d", len(cmd.parameters))
+	}
+
+	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
+	if err != nil {
+		return err	
+	}
+
+	followings, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return fmt.Errorf("error fetching feed from the database: %s", err)		
+	}
+
+	for _, following := range followings {
+		fmt.Printf("feed name: %s, user: %s\n", following.FeedName, following.UserName)
 	}
 
 	return  nil

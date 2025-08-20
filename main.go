@@ -7,6 +7,7 @@ import (
 
 	"github.com/ahsanwtc/gator/internal/config"
 	"github.com/ahsanwtc/gator/internal/database"
+	"github.com/ahsanwtc/gator/internal/services"
 	_ "github.com/lib/pq"
 )
 
@@ -23,9 +24,11 @@ func main () {
 		os.Exit(1)
 	}
 
+	dbQueries := database.New(db)
 	state := State{
 		config: &cfg,
-		db: database.New(db),
+		db: dbQueries,
+		userService: services.NewUserService(dbQueries),
 	}
 
 	commands := Commands{
@@ -40,6 +43,8 @@ func main () {
 	commands.register("agg", handlerAggregate)
 	commands.register("addfeed", handlerAddFeed)
 	commands.register("feeds", handlerFeeds)
+	commands.register("follow", handlerFollow)
+	commands.register("following", handlerFollowing)
 	
 	args := os.Args
 
@@ -86,6 +91,16 @@ func main () {
 		case "feeds":
 			commandError = commands.run(&state, Command{
 				name: "feeds",
+				parameters: parameters,
+			})
+		case "follow":
+			commandError = commands.run(&state, Command{
+				name: "follow",
+				parameters: parameters,
+			})
+		case "following":
+			commandError = commands.run(&state, Command{
+				name: "following",
 				parameters: parameters,
 			})
 		default:
