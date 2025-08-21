@@ -17,6 +17,10 @@ type Command struct {
 	parameters []string
 }
 
+type CommandHandler func(s *State, cmd Command) error
+
+type CommandHandlerWithUser func(s *State, cmd Command, user database.User) error
+
 type Commands struct {
-	commands map[string]func(*State, Command)error
+	commands map[string]CommandHandler
 }

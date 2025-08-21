@@ -167,7 +167,7 @@ func handlerAggregate(s *State, cmd Command) error {
 	return  nil
 }
 
-func handlerAddFeed(s *State, cmd Command) error {
+func handlerAddFeed(s *State, cmd Command, user database.User) error {
 	if cmd.name != "addfeed" {
 		return fmt.Errorf("wrong command handler")
 	}
@@ -181,11 +181,6 @@ func handlerAddFeed(s *State, cmd Command) error {
 
 	if len(name) == 0 || len(url) == 0 {
 		return fmt.Errorf("invalid parameter values")
-	}
-
-	user, err := s.userService.FetchUserByName(s.config.CURRENT_USER)
-	if err != nil {
-		return err
 	}
 
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
@@ -245,7 +240,7 @@ func handlerFeeds(s *State, cmd Command) error {
 	return  nil
 }
 
-func handlerFollow(s *State, cmd Command) error {
+func handlerFollow(s *State, cmd Command, user database.User) error {
 	if cmd.name != "follow" {
 		return fmt.Errorf("wrong command handler")
 	}
@@ -257,11 +252,6 @@ func handlerFollow(s *State, cmd Command) error {
 	url := cmd.parameters[0]
 	if url == "" {
 		return fmt.Errorf("invalid url")
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
-	if err != nil {
-		return fmt.Errorf("error fetching user from the database: %s", err)		
 	}
 
 	feed, err := s.db.GetFeedByUrl(context.Background(), url)
@@ -283,18 +273,13 @@ func handlerFollow(s *State, cmd Command) error {
 	return  nil
 }
 
-func handlerFollowing(s *State, cmd Command) error {
+func handlerFollowing(s *State, cmd Command, user database.User) error {
 	if cmd.name != "following" {
 		return fmt.Errorf("wrong command handler")
 	}
 
 	if len(cmd.parameters) != 0 {
 		return fmt.Errorf("following expects 0 argument but got %d", len(cmd.parameters))
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.config.CURRENT_USER)
-	if err != nil {
-		return err	
 	}
 
 	followings, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
