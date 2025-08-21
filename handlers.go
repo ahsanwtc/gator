@@ -293,3 +293,32 @@ func handlerFollowing(s *State, cmd Command, user database.User) error {
 
 	return  nil
 }
+
+func handlerUnfollow(s *State, cmd Command, user database.User) error {
+	if cmd.name != "unfollow" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) != 1 {
+		return fmt.Errorf("unfollow expects 1 argument but got %d", len(cmd.parameters))
+	}
+
+	url := cmd.parameters[0]
+	if url == "" {
+		return fmt.Errorf("invalid url")
+	}
+
+	feed, err := s.db.GetFeedByUrl(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("error fetching feed from the database: %s", err)		
+	}
+
+	err = s.db.DeleteFollowByFeedId(context.Background(), feed.ID)
+	if err != nil {
+		return fmt.Errorf("error deleting a feed_follow: %s", err)		
+	}
+
+	fmt.Printf("user: %s does not follow '%s' anymore, \n", user.Name, feed.Url)
+
+	return  nil
+}
