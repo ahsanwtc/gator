@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/ahsanwtc/gator/internal/database"
 	"github.com/ahsanwtc/gator/internal/rss"
@@ -155,16 +156,26 @@ func handlerAggregate(s *State, cmd Command) error {
 		return fmt.Errorf("wrong command handler")
 	}
 
-	// if len(cmd.parameters) != 0 {
-	// 	return fmt.Errorf("agg expects 0 argument but got %d", len(cmd.parameters))
-	// }
-
-	rssFeed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		return err
+	if len(cmd.parameters) != 1 {
+		return fmt.Errorf("agg expects 1 argument but got %d", len(cmd.parameters))
 	}
-	fmt.Println(rssFeed)
-	return  nil
+
+	timeBetweenReqs, err := time.ParseDuration(cmd.parameters[0])
+	if err != nil {
+		return fmt.Errorf("time should be provided as 1s, 1m, 1h etc. %w", err)
+	}
+
+	fmt.Printf("Collecting feeds every %s\n", timeBetweenReqs.String())
+
+	ticker := time.NewTicker(timeBetweenReqs)
+	defer ticker.Stop()
+
+	for ; ; <-ticker.C {
+		err := rss.ScrapeFeeds(context.Background(), s.db)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 func handlerAddFeed(s *State, cmd Command, user database.User) error {
