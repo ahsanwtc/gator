@@ -46,6 +46,7 @@ func main () {
 	commands.register("follow", middlewareLoggedIn(handlerFollow))
 	commands.register("following", middlewareLoggedIn(handlerFollowing))
 	commands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	commands.register("browse", middlewareLoggedIn(handlerBrowse))
 	
 	args := os.Args
 
@@ -107,6 +108,11 @@ func main () {
 		case "unfollow":
 			commandError = commands.run(&state, Command{
 				name: "unfollow",
+				parameters: parameters,
+			})
+		case "browse":
+			commandError = commands.run(&state, Command{
+				name: "browse",
 				parameters: parameters,
 			})
 		default:

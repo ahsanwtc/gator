@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/ahsanwtc/gator/internal/database"
@@ -330,6 +331,42 @@ func handlerUnfollow(s *State, cmd Command, user database.User) error {
 	}
 
 	fmt.Printf("user: %s does not follow '%s' anymore, \n", user.Name, feed.Url)
+
+	return  nil
+}
+
+func handlerBrowse(s *State, cmd Command, user database.User) error {
+	if cmd.name != "browse" {
+		return fmt.Errorf("wrong command handler")
+	}
+
+	if len(cmd.parameters) > 1 {
+		return fmt.Errorf("browse expects 0 or 1 argument but got %d", len(cmd.parameters))
+	}
+
+	var limit int32 = 2
+	if len(cmd.parameters) == 1 {
+		l, err := strconv.ParseInt(cmd.parameters[0], 10, 32)
+		if err != nil {
+			fmt.Println("error parsing limit value, defaulting to 2. err: ", err)
+		}
+		limit = int32(l)
+	}
+
+	posts, err := s.db.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit: limit,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error fetching posts from the database: %s", err)		
+	}
+
+	for _, post := range posts {
+		fmt.Println()
+		fmt.Printf("Title: `%s`\n", post.Title)
+		fmt.Println(post.Description)
+	}
 
 	return  nil
 }
