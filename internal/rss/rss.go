@@ -2,13 +2,17 @@ package rss
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/ahsanwtc/gator/internal/database"
+	"github.com/google/uuid"
 )
 
 func FetchFeed(ctx context.Context, feedUrl string) (*RSSFeed, error)  {
@@ -70,10 +74,45 @@ func ScrapeFeeds(ctx context.Context, db *database.Queries) error {
 		return err
 	}
 
-	fmt.Printf("Feed: %s\n", feeds.Channel.Title)
-	for i:= 0; i < len(feeds.Channel.Item); i++ {
-		fmt.Printf(" - %s\n", feeds.Channel.Item[i].Title)
+	for _, feed := range feeds.Channel.Item {
+		_, err := db.CreatePost(ctx, database.CreatePostParams{
+			ID: uuid.New(),
+			Title: feed.Title,
+			Description: feed.Description,
+			Url: feed.Link,
+			FeedID: nextFeed.ID,
+			PublishedAt: parseDate(feed.PubDate),
+		})
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
 	}
 
+	fmt.Printf("Feed: `%s` added\n", feeds.Channel.Title)
 	return nil
+}
+
+func parseDate(d string) sql.NullTime {
+	timeLayouts := []string{
+		time.RFC1123Z,           // "Mon, 02 Jan 2006 15:04:05 -0700"
+		time.RFC1123,            // "Mon, 02 Jan 2006 15:04:05 MST"
+		time.RFC3339,            // "2006-01-02T15:04:05Z07:00"
+		time.RFC3339Nano,        // "2006-01-02T15:04:05.999999999Z07:00"
+		time.RubyDate,           // "Mon Jan 02 15:04:05 -0700 2006"
+		"Mon, 02 Jan 2006 15:04:05 MST", // custom variant
+	}
+	
+	d = strings.TrimSpace(d)
+	if d == "" {
+		return sql.NullTime{}
+	}
+
+	for _, layout := range timeLayouts {
+		if t, err := time.Parse(layout, d); err == nil {
+			return sql.NullTime{Time: t.UTC(), Valid: true}
+		}
+	}
+	return sql.NullTime{}
 }
